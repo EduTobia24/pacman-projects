@@ -133,6 +133,35 @@ def depth_first_search(problem):
     print("Start's successors:", problem.get_successors(problem.get_start_state()))
     """
     "*** YOUR CODE HERE ***"
+    from util import Stack
+
+    start_node = SearchNode(None, (problem.get_start_state(),None, 0))
+    visited_states = set()
+
+    stack = Stack()
+
+    stack.push(start_node)
+
+    while not stack.is_empty():
+        current_node = stack.pop()
+
+        # check if node's STATE is visited (not the node itself)
+        if current_node.state in visited_states:
+            continue
+
+        # add node's STATE to set (not the node itself)
+        visited_states.add(current_node.state)
+
+        # check if state is goal
+        if problem.is_goal_state(current_node.state):
+            return current_node.get_path()
+        
+        # search children from current node
+        for child_state, child_action, child_cost in problem.get_successors(current_node.state):
+            if child_state not in visited_states:
+                child_node = SearchNode(current_node, (child_state, child_action, child_cost))
+                stack.push(child_node)
+
     util.raise_not_defined()
 
 
@@ -140,11 +169,69 @@ def depth_first_search(problem):
 def breadth_first_search(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
+    from util import Queue
+
+    start_node = SearchNode(None, (problem.get_start_state(),None, 0))
+    visited_states = set()
+
+    queue = Queue()
+
+    queue.push(start_node)
+
+    while not queue.is_empty():
+        current_node = queue.pop()
+
+        # check if node's STATE is visited (not the node itself)
+        if current_node.state in visited_states:
+            continue
+
+        # add node's STATE to set (not the node itself)
+        visited_states.add(current_node.state)
+
+        # check if state is goal
+        if problem.is_goal_state(current_node.state):
+            return current_node.get_path()
+        
+        # search children from current node
+        for child_state, child_action, child_cost in problem.get_successors(current_node.state):
+            if child_state not in visited_states:
+                child_node = SearchNode(current_node, (child_state, child_action, child_cost))
+                queue.push(child_node)
+
     util.raise_not_defined()
 
 def uniform_cost_search(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+    from util import PriorityQueue
+
+    start_node = SearchNode(None, (problem.get_start_state(),None, 0))
+    visited_states = set()
+
+    pqueue = PriorityQueue()
+
+    pqueue.push(start_node,0)
+
+    while not pqueue.is_empty():
+        current_node = pqueue.pop()
+
+        # check if node's STATE is visited (not the node itself)
+        if current_node.state in visited_states:
+            continue
+
+        # add node's STATE to set (not the node itself)
+        visited_states.add(current_node.state)
+
+        # check if state is goal
+        if problem.is_goal_state(current_node.state):
+            return current_node.get_path()
+        
+        # search children from current node
+        for child_state, child_action, child_cost in problem.get_successors(current_node.state):
+            if child_state not in visited_states:
+                child_node = SearchNode(current_node, (child_state, child_action, child_cost))
+                pqueue.push(child_node, child_node.cost)
+
     util.raise_not_defined()
 
 def null_heuristic(state, problem=None):
