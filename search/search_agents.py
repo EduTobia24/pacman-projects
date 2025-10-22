@@ -580,7 +580,7 @@ def food_heuristic(state, problem):
     #hyperparameter to tune:
     # Lower values --> lower spread, more greedy
     # Higher values --> higher spread, more expensive
-    w = 2
+    w = 1
     
     for food_position in food_list:
         d = util.manhattan_distance(position, food_position)
