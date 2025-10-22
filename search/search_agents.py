@@ -580,13 +580,13 @@ def food_heuristic(state, problem):
     #hyperparameter to tune:
     # Lower values --> lower spread, more greedy
     # Higher values --> higher spread, more expensive
-    w = 1
-    
+    w = 0.96
+
     for food_position in food_list:
         d = util.manhattan_distance(position, food_position)
         sum += w * sqrt(d)
 
-    return sum 
+    return sum
 
 def simplified_corners_heuristic(state, problem):
     """
