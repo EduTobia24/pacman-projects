@@ -244,23 +244,31 @@ def null_heuristic(state, problem=None):
 def a_star_search(problem, heuristic=null_heuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    # TO DO IN THE FUTURE
+    # link each succesor to its parent in expanded states to update cost function for each in the frontier
     from util import PriorityQueue
-    start_node = SearchNode(None, (problem.get_start_state(),None, 0))
-    visited_states = set()
+    
+    # we store states since cost is not relevant once expanded if we are 
+    # not going to keep track of successors to update their cost
+    expanded_states = set() 
 
-    pqueue = PriorityQueue()
+    # init frontier 
+    frontier = PriorityQueue()
+    frontier_states = set() # to check if state is already in frontier
+    
+    # add start node
+    frontier.push(SearchNode(None, (problem.get_start_state(),None, 0)),0)
+    frontier_states.add(problem.get_start_state())
 
-    pqueue.push(start_node,0)
+    while not frontier.is_empty():
+        current_node = frontier.pop()
+        frontier_states.discard(current_node.state)
 
-    while not pqueue.is_empty():
-        current_node = pqueue.pop()
-
-        # check if node's STATE is visited (not the node itself)
-        if current_node.state in visited_states:
+        if current_node.state in expanded_states:
             continue
 
         # add node's STATE to set (not the node itself)
-        visited_states.add(current_node.state)
+        expanded_states.add(current_node.state)
 
         # check if state is goal
         if problem.is_goal_state(current_node.state):
@@ -268,9 +276,14 @@ def a_star_search(problem, heuristic=null_heuristic):
         
         # search children from current node
         for child_state, child_action, child_cost in problem.get_successors(current_node.state):
-            if child_state not in visited_states:
-                child_node = SearchNode(current_node, (child_state, child_action, child_cost))
-                pqueue.push(child_node, child_node.cost)
+            path_cost = current_node.cost + heuristic(child_state, problem)
+            child_node = SearchNode(current_node, (child_state, child_action, child_cost))
+            
+            if (child_state not in expanded_states) and (child_state not in frontier_states):
+                frontier.push(child_node, path_cost)
+                frontier_states.add(child_state)
+            elif (child_state in frontier_states):
+                frontier.update(child_node,path_cost)
 
     util.raise_not_defined()
 

@@ -535,9 +535,7 @@ def food_heuristic(state, problem):
     food_list = food_grid.as_list()
 
     if not food_list:
-        
         return 0
-
     
     if 'distances' not in problem.heuristic_info:
         problem.heuristic_info['distances'] = {}  #we use it to save the distances already calculated
@@ -548,12 +546,11 @@ def food_heuristic(state, problem):
         if key in problem.heuristic_info['distances']: #if it is in the dictionary, we do not calculate it again, we check it from there
             d = problem.heuristic_info['distances'][key]
         else:
-            d = maze_distance(position, food_position, problem.starting_game_state)
+            d = util.manhattan_distance(position, food_position)
             problem.heuristic_info['distances'][key] = d
         max_distance = max(max_distance, d)
 
     return max_distance
-    return 0
 
 
 def simplified_corners_heuristic(state, problem):
