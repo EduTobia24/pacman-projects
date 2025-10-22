@@ -532,6 +532,27 @@ def food_heuristic(state, problem):
     """
     position, food_grid = state
     "*** YOUR CODE HERE ***"
+    food_list = food_grid.as_list()
+
+    if not food_list:
+        
+        return 0
+
+    
+    if 'distances' not in problem.heuristic_info:
+        problem.heuristic_info['distances'] = {}  #we use it to save the distances already calculated
+
+    max_distance = 0
+    for food_position in food_list:
+        key = (position, food_position)
+        if key in problem.heuristic_info['distances']: #if it is in the dictionary, we do not calculate it again, we check it from there
+            d = problem.heuristic_info['distances'][key]
+        else:
+            d = maze_distance(position, food_position, problem.starting_game_state)
+            problem.heuristic_info['distances'][key] = d
+        max_distance = max(max_distance, d)
+
+    return max_distance
     return 0
 
 
