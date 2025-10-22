@@ -537,21 +537,56 @@ def food_heuristic(state, problem):
     if not food_list:
         return 0
     
-    if 'distances' not in problem.heuristic_info:
-        problem.heuristic_info['distances'] = {}  #we use it to save the distances already calculated
+    # max distance heuristic:
+    # returns the maximum manhattan distance of all dots: 9551 nodes expanded
+    """max_distance = 0
 
-    max_distance = 0
     for food_position in food_list:
-        key = (position, food_position)
-        if key in problem.heuristic_info['distances']: #if it is in the dictionary, we do not calculate it again, we check it from there
-            d = problem.heuristic_info['distances'][key]
-        else:
-            d = util.manhattan_distance(position, food_position)
-            problem.heuristic_info['distances'][key] = d
+        d = util.manhattan_distance(position, food_position)
         max_distance = max(max_distance, d)
 
-    return max_distance
+    return max_distance"""
 
+    # weighted manhattan distance of all dots: 11254 nodes expanded
+    """weighted_d = 0
+    
+    for food_position in food_list:
+        d = util.manhattan_distance(position, food_position)
+        weighted_d += d
+
+    return weighted_d / len(food_list)"""
+
+    # sum of manhattan distances of all dots: 5423 nodes expanded
+    """sum = 0
+    
+    for food_position in food_list:
+        d = util.manhattan_distance(position, food_position)
+        sum += d
+
+    return sum"""
+
+    # sum of sqrt of manhattan distances of all dots:
+    # w = 1 --> 6728 nodes. Optimal
+    # w = 2 --> 5041 nodes. Suboptimal
+    # w = 3 --> 3466 nodes. Suboptimal
+    # w = 1.5 --> 5448 nodes. suboptimal
+    # w = 1.25 --> 5688 nodes. Optimal
+    # w = 1.375 --> 5420 nodes. Optimal
+    # w = 1.4 --> 5394 nodes. Optimal
+
+    from numpy import sqrt
+    sum = 0
+    
+    #hyperparameter to tune:
+    # Lower values --> lower spread, more greedy
+    # Higher values --> higher spread, more expensive
+    w = 2
+    
+    for food_position in food_list:
+        d = util.manhattan_distance(position, food_position)
+        sum += w * sqrt(d)
+
+    return sum 
 
 def simplified_corners_heuristic(state, problem):
     """
