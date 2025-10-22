@@ -270,7 +270,6 @@ def a_star_search(problem, heuristic=null_heuristic):
         for child_state, child_action, child_cost in problem.get_successors(current_node.state):
             if child_state not in visited_states:
                 child_node = SearchNode(current_node, (child_state, child_action, child_cost))
-                print(f"child_cost: {child_cost}; child_node.cost: {child_node.cost}")
                 pqueue.push(child_node, child_node.cost)
 
     util.raise_not_defined()
