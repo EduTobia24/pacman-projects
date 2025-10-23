@@ -502,6 +502,7 @@ def power_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
+#@profile
 def food_heuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -547,46 +548,50 @@ def food_heuristic(state, problem):
 
     return max_distance"""
 
-    # weighted manhattan distance of all dots: 11254 nodes expanded
-    """weighted_d = 0
-    
+    # mean distance + food penalty
+    """d = []
     for food_position in food_list:
-        d = util.manhattan_distance(position, food_position)
-        weighted_d += d
+        d += food_position
 
-    return weighted_d / len(food_list)"""
+    d = [d[0]/len(food_list),d[1]/len(food_list)]
+    mean_distance = util.manhattan_distance(position, d)
 
-    # sum of manhattan distances of all dots: 5423 nodes expanded
-    """sum = 0
+    return mean_distance + len(food_list) - 1 """
+
+    # manhattan + maze
+    """we use two dictionaries to store both manhattan and maze
+    distances to save computation time. First we find the furthest dot with manhattan
+    aproximation and then we compute real maze distance for accuracy."""
     
+    if 'manhattan_d' not in problem.heuristic_info:
+        problem.heuristic_info['manhattan_d'] = {} 
+    if 'maze_d' not in problem.heuristic_info:
+        problem.heuristic_info['maze_d'] = {}         
+
+    #find max distance from pacman to each food
+    max_d = 0
     for food_position in food_list:
-        d = util.manhattan_distance(position, food_position)
-        sum += d
+        key = (position, food_position)
 
-    return sum"""
+        if key in problem.heuristic_info['manhattan_d']: 
+            d = problem.heuristic_info['manhattan_d'][key]
+        else:
+            d = util.manhattan_distance(position, food_position)
+            problem.heuristic_info['manhattan_d'][key] = d
 
-    # sum of sqrt of manhattan distances of all dots:
-    # w = 1 --> 6728 nodes. Optimal
-    # w = 2 --> 5041 nodes. Suboptimal
-    # w = 3 --> 3466 nodes. Suboptimal
-    # w = 1.5 --> 5448 nodes. suboptimal
-    # w = 1.25 --> 5688 nodes. Optimal
-    # w = 1.375 --> 5420 nodes. Optimal
-    # w = 1.4 --> 5394 nodes. Optimal
 
-    from numpy import sqrt
-    sum = 0
+        if d > max_d:
+            max_d = max(max_d, d)
+            max_p = food_position
+
+    # compute maze distance of pacman to furthest food
+    maze_key = (position, max_p)
+    if maze_key in problem.heuristic_info['maze_d']:
+        return problem.heuristic_info['maze_d'][maze_key]
     
-    #hyperparameter to tune:
-    # Lower values --> lower spread, more greedy
-    # Higher values --> higher spread, more expensive
-    w = 0.96
+    problem.heuristic_info['maze_d'][maze_key] = maze_distance(position, max_p, problem.starting_game_state)
+    return problem.heuristic_info['maze_d'][maze_key]
 
-    for food_position in food_list:
-        d = util.manhattan_distance(position, food_position)
-        sum += w * sqrt(d)
-
-    return sum
 
 def simplified_corners_heuristic(state, problem):
     """
