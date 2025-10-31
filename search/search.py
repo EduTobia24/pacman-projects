@@ -276,14 +276,14 @@ def a_star_search(problem, heuristic=null_heuristic):
         
         # search children from current node
         for child_state, child_action, child_cost in problem.get_successors(current_node.state):
-            path_cost = current_node.cost + heuristic(child_state, problem)
             child_node = SearchNode(current_node, (child_state, child_action, child_cost))
+            f_n = child_node.cost + heuristic(child_state, problem)
 
             if (child_state not in expanded_states) and (child_state not in frontier_states):
-                frontier.push(child_node, path_cost)
+                frontier.push(child_node, f_n)
                 frontier_states.add(child_state)
             elif (child_state in frontier_states):
-                frontier.update(child_node,path_cost)
+                frontier.update(child_node, f_n)
 
     util.raise_not_defined()
 

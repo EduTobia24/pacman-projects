@@ -301,14 +301,15 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        return (self.startingPosition, tuple())
 
     def is_goal_state(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        visited_corners = state[1]
+        return len(visited_corners) == 4
 
     def get_successors(self, state):
         """
@@ -331,6 +332,23 @@ class CornersProblem(search.SearchProblem):
             #   hits_wall = self.walls[next_x][next_y]
 
             "*** YOUR CODE HERE ***"
+            current_position = state[0]
+            visited_corners = state[1]
+            x, y = current_position
+            dx, dy = Actions.direction_to_vector(action)
+            next_x, next_y = int(x + dx), int(y + dy)
+            isWall = self.walls[next_x][next_y]
+            
+            if not isWall:
+                next_pos = (next_x, next_y)
+                # Check if the new position is a corner we haven't visited yet
+                new_visited_corners = visited_corners
+                if next_pos in self.corners and next_pos not in visited_corners:
+                    # Add this corner to visited corners (keeping it sorted for consistency)
+                    new_visited_corners = tuple(sorted(visited_corners + (next_pos,)))
+                
+                next_state = (next_pos, new_visited_corners)
+                successors.append((next_state, action, 1))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -380,7 +398,46 @@ def corners_heuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    position = state[0]
+    visited_corners = state[1]
+    
+    # Find unvisited corners
+    unvisited_corners = [corner for corner in corners if corner not in visited_corners]
+    
+    # If no unvisited corners, we're at goal
+    if not unvisited_corners:
+        return 0
+    
+    # If only one unvisited corner, return Manhattan distance to it
+    if len(unvisited_corners) == 1:
+        return util.manhattan_distance(position, unvisited_corners[0])
+    
+    # For multiple unvisited corners, use distance to nearest + MST of unvisited
+    # Find minimum distance to any unvisited corner
+    min_to_corner = min(util.manhattan_distance(position, corner) for corner in unvisited_corners)
+    
+    # Compute MST of unvisited corners using Prim's algorithm
+    visited_mst = set()
+    visited_mst.add(unvisited_corners[0])
+    mst_cost = 0
+    
+    while len(visited_mst) < len(unvisited_corners):
+        min_edge_cost = float('inf')
+        next_corner = None
+        
+        # Find minimum edge from visited to unvisited
+        for visited_corner in visited_mst:
+            for corner in unvisited_corners:
+                if corner not in visited_mst:
+                    edge_cost = util.manhattan_distance(visited_corner, corner)
+                    if edge_cost < min_edge_cost:
+                        min_edge_cost = edge_cost
+                        next_corner = corner
+        
+        visited_mst.add(next_corner)
+        mst_cost += min_edge_cost
+    
+    return min_to_corner + mst_cost
 
 class AStarCornersAgent(SearchAgent):
     """A SearchAgent for FoodSearchProblem using A* and your food_heuristic"""
@@ -502,7 +559,7 @@ def power_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-#@profile
+@profile
 def food_heuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
@@ -537,60 +594,94 @@ def food_heuristic(state, problem):
 
     if not food_list:
         return 0
+
+    """
+    Compute maze_distance between pacman and all dots. Distances stored in dictionary pac_to_dot.
+    Compute maze_distance among all dots. Stored in dictionary dot_to_dot. (edges for mst)
+    Compute mst of the dots. Stored in dictionary mst.
+    returns (mst of dots + distance of pacman to closest dot).
     
-    # max distance heuristic:
-    # returns the maximum manhattan distance of all dots: 9551 nodes expanded
-    """max_distance = 0
-
-    for food_position in food_list:
-        d = util.manhattan_distance(position, food_position)
-        max_distance = max(max_distance, d)
-
-    return max_distance"""
-
-    # mean distance + food penalty
-    """d = []
-    for food_position in food_list:
-        d += food_position
-
-    d = [d[0]/len(food_list),d[1]/len(food_list)]
-    mean_distance = util.manhattan_distance(position, d)
-
-    return mean_distance + len(food_list) - 1 """
-
-    # manhattan + maze
-    """we use two dictionaries to store both manhattan and maze
-    distances to save computation time. First we find the furthest dot with manhattan
-    aproximation and then we compute real maze distance for accuracy."""
+    For future implementations, i would consider using dictionary or parametric function that defines 
+    which coordinates belong to each dot ( given a pacman position and a food_list,
+    return the closest dot). This should improve time since profiler shows that computing this distances take 70% of
+    running time in trickySearch.
+    """
     
-    if 'manhattan_d' not in problem.heuristic_info:
-        problem.heuristic_info['manhattan_d'] = {} 
-    if 'maze_d' not in problem.heuristic_info:
-        problem.heuristic_info['maze_d'] = {}         
+    #dictionaries
+    if 'mst' not in problem.heuristic_info:
+        problem.heuristic_info['mst'] = {}  
+    if 'pac_to_dot' not in problem.heuristic_info:
+        problem.heuristic_info['pac_to_dot'] = {}      
+    if 'dot_to_dot' not in problem.heuristic_info:
+        problem.heuristic_info['dot_to_dot'] = {}  
 
-    #find max distance from pacman to each food
-    max_d = 0
+    #find closest dot
+    min_d = 1000000
     for food_position in food_list:
         key = (position, food_position)
 
-        if key in problem.heuristic_info['manhattan_d']: 
-            d = problem.heuristic_info['manhattan_d'][key]
+        if key in problem.heuristic_info['pac_to_dot']: 
+            d = problem.heuristic_info['pac_to_dot'][key]
         else:
-            d = util.manhattan_distance(position, food_position)
-            problem.heuristic_info['manhattan_d'][key] = d
+            d = maze_distance(position, food_position, problem.starting_game_state)
+            problem.heuristic_info['pac_to_dot'][key] = d
 
+        min_d = min(min_d, d)
 
-        if d > max_d:
-            max_d = max(max_d, d)
-            max_p = food_position
-
-    # compute maze distance of pacman to furthest food
-    maze_key = (position, max_p)
-    if maze_key in problem.heuristic_info['maze_d']:
-        return problem.heuristic_info['maze_d'][maze_key]
+    # compute mst of food_list
+    """ Tested food_list and sorted(food_list) as food_key: food_list result to be better"""
+  
+    food_key = tuple(food_list)
     
-    problem.heuristic_info['maze_d'][maze_key] = maze_distance(position, max_p, problem.starting_game_state)
-    return problem.heuristic_info['maze_d'][maze_key]
+    if food_key in problem.heuristic_info['mst']:
+        mst_cost = problem.heuristic_info['mst'][food_key]
+    else:
+        # base case
+        if len(food_list) <= 1:
+            mst_cost = 0
+        else:
+            # Initialize visited set with the first food position
+            visited = set()
+            visited.add(food_list[0])
+            
+            # Initialize total cost
+            mst_cost = 0
+
+            # Iterate until all vertices are visited
+            while len(visited) < len(food_list):
+                min_edge_cost = float('inf')
+                next_food = None
+                
+                # Find the minimum edge from visited to unvisited nodes
+                for visited_food in visited:
+                    for food in food_list:
+                        if food not in visited:
+                            # pair key for caching
+                            maze_key = tuple(sorted([visited_food, food]))
+                            
+                            # Check cache
+                            if maze_key in problem.heuristic_info['dot_to_dot']:
+                                edge_cost = problem.heuristic_info['dot_to_dot'][maze_key]
+                            else:
+                                # Compute maze distance
+                                edge_cost = maze_distance(visited_food, food, problem.starting_game_state)
+                                problem.heuristic_info['dot_to_dot'][maze_key] = edge_cost
+                            
+                            # Update minimum edge
+                            if edge_cost < min_edge_cost:
+                                min_edge_cost = edge_cost
+                                next_food = food
+                
+                # Add the new vertex to the MST
+                visited.add(next_food)
+                
+                # Add the cost of this edge
+                mst_cost += min_edge_cost
+            
+            problem.heuristic_info['mst'][food_key] = mst_cost
+
+    # Return minimum distance to closest food + MST cost
+    return min_d + mst_cost
 
 
 def simplified_corners_heuristic(state, problem):
