@@ -559,7 +559,7 @@ def power_set(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-@profile
+#@profile
 def food_heuristic(state, problem):
     """
     Your heuristic for the FoodSearchProblem goes here.
