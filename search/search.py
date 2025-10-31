@@ -267,7 +267,7 @@ def a_star_search(problem, heuristic=null_heuristic):
         if current_node.state in expanded_states:
             continue
 
-        # add node's STATE to set (not the node itself)
+        # add state to expanded states
         expanded_states.add(current_node.state)
 
         # check if state is goal
@@ -278,7 +278,7 @@ def a_star_search(problem, heuristic=null_heuristic):
         for child_state, child_action, child_cost in problem.get_successors(current_node.state):
             path_cost = current_node.cost + heuristic(child_state, problem)
             child_node = SearchNode(current_node, (child_state, child_action, child_cost))
-            
+
             if (child_state not in expanded_states) and (child_state not in frontier_states):
                 frontier.push(child_node, path_cost)
                 frontier_states.add(child_state)
