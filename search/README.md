@@ -217,7 +217,7 @@ _Note: Make sure to complete Question 4 before working on Question 7, because Qu
 
 Fill in `food_heuristic` in `search_agents.py` with a consistent heuristic for the `FoodSearchProblem`. Try your agent on the `trickySearch` board:
 
-`python pacman.py -l trickySearch -p AStarFoodSearchAgent`
+` `
 
 Our `UCS` agent finds the optimal solution in about 13 seconds, exploring over 16,000 nodes.
 
