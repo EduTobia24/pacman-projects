@@ -156,7 +156,42 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        # Terminal or depth limit
+        max_depth = 5
+
+        if max_depth == self.depth or game_state.is_win() or game_state.is_lose():
+            return self.evaluation_function(game_state)
+
+        num_agents = game_state.get_num_agents()
+
+        # MAX (Pacman)
+        if self.depth % 2 == 0:
+            value = float('-inf')
+            for action in game_state.get_legal_actions(0):
+                successor = game_state.generate_successor(0, action)
+                value = max(value, MinimaxAgent.get_action(self, successor))
+            return value
+
+        # MIN (Ghost)
+        else:
+            value = float('inf')
+            for action in game_state.get_legal_actions(agent_index):
+                successor = game_state.generate_successor(agent_index, action)
+                value = min(value, minimax(successor, depth + 1, (agent_index + 1) % num_agents))
+            return value
+
+    # Root call: choose the best action for Pacman
+    best_score = float('-inf')
+    best_action = None
+    for action in game_state.get_legal_actions(0):
+        successor = game_state.generate_successor(0, action)
+        score = minimax(successor, 1, 1 % game_state.get_num_agents())
+        if score > best_score:
+            best_score = score
+            best_action = action
+
+    return best_action
+    util.raise_not_defined()
     
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
