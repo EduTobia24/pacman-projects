@@ -155,44 +155,54 @@ class MinimaxAgent(MultiAgentSearchAgent):
         game_state.is_lose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
-        # Terminal or depth limit
-        max_depth = 5
+        "*** YOUR CODE HERE ***"      
+        import numpy as np
+        #returns minimax evaluation
+        def minimax(depth, gamestate):
 
-        if max_depth == self.depth or game_state.is_win() or game_state.is_lose():
-            return self.evaluation_function(game_state)
+            # base case: depth limit or win or lose
+            if depth == max_depth or gamestate.is_win() or gamestate.is_lose():
+                return self.evaluation_function(gamestate)
 
-        num_agents = game_state.get_num_agents()
+            # recursive case
+            
+            #identify the agent
+            agent_idx = depth % gamestate.get_num_agents()
 
-        # MAX (Pacman)
-        if self.depth % 2 == 0:
-            value = float('-inf')
-            for action in game_state.get_legal_actions(0):
-                successor = game_state.generate_successor(0, action)
-                value = max(value, MinimaxAgent.get_action(self, successor))
-            return value
+            actions = gamestate.get_legal_actions(agent_idx)
 
-        # MIN (Ghost)
-        else:
-            value = float('inf')
-            for action in game_state.get_legal_actions(agent_index):
-                successor = game_state.generate_successor(agent_index, action)
-                value = min(value, minimax(successor, depth + 1, (agent_index + 1) % num_agents))
-            return value
+            evals = []
+            for action in actions:
+                evals.append(minimax(depth + 1, gamestate.generate_successor(agent_idx, action)))
 
-    # Root call: choose the best action for Pacman
-    best_score = float('-inf')
-    best_action = None
-    for action in game_state.get_legal_actions(0):
-        successor = game_state.generate_successor(0, action)
-        score = minimax(successor, 1, 1 % game_state.get_num_agents())
-        if score > best_score:
-            best_score = score
-            best_action = action
+            #max for pacman
+            if agent_idx == 0:
+                return np.max(evals)
+            # min for ghost
+            else: 
+                return np.min(evals)
+            
+        max_depth = (self.depth * game_state.get_num_agents())
+        
+        # starting node ( agent = 0, for minimax= 1 ( first ghost ))
+        agent = 0
+        actions = game_state.get_legal_actions(agent)
+        max_score = 0
+        for action in actions:
+            score = minimax(1, game_state.generate_successor(agent, action))
+            if max_score <= score:
+                max_score = score
+                max_action = action
 
-    return best_action
-    util.raise_not_defined()
-    
+        return action
+
+
+        
+
+
+
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
