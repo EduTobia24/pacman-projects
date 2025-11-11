@@ -132,6 +132,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     Your minimax agent (question 2)
     """
 
+    #@profile
     def get_action(self, game_state):
         """
         Returns the minimax action from the current game_state using self.depth
@@ -156,31 +157,32 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"      
-        import numpy as np
         #returns minimax evaluation
+        #@profile
         def minimax(depth, gamestate):
-
+            num_agents = game_state.get_num_agents()
             # base case: depth limit or win or lose
-            if (depth == self.depth * game_state.get_num_agents()) or gamestate.is_win() or gamestate.is_lose():
+            if (depth == self.depth * num_agents) or gamestate.is_win() or gamestate.is_lose():
                 return self.evaluation_function(gamestate)
 
             # recursive case
             
             #identify the agent
-            agent_idx = depth % gamestate.get_num_agents()
+            agent_idx = depth % num_agents
 
             actions = gamestate.get_legal_actions(agent_idx)
 
+            # compute and store the recursive minimax evaluation for each action
             evals = []
             for action in actions:
                 evals.append(minimax(depth + 1, gamestate.generate_successor(agent_idx, action)))
 
-            #max for pacman
+            # return max eval for pacman
             if agent_idx == 0:
-                return np.max(evals)
-            # min for ghost
+                return max(evals)
+            # return min eval for ghost
             else: 
-                return np.min(evals)
+                return min(evals)
                     
         # starting node ( agent = 0, for minimax= 1 ( first ghost ))
         agent = 0
