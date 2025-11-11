@@ -161,7 +161,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         def minimax(depth, gamestate):
 
             # base case: depth limit or win or lose
-            if depth == max_depth or gamestate.is_win() or gamestate.is_lose():
+            if (depth == self.depth * game_state.get_num_agents()) or gamestate.is_win() or gamestate.is_lose():
                 return self.evaluation_function(gamestate)
 
             # recursive case
@@ -181,20 +181,18 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # min for ghost
             else: 
                 return np.min(evals)
-            
-        max_depth = (self.depth * game_state.get_num_agents())
-        
+                    
         # starting node ( agent = 0, for minimax= 1 ( first ghost ))
         agent = 0
         actions = game_state.get_legal_actions(agent)
-        max_score = 0
+        max_score = -float('inf')
         for action in actions:
             score = minimax(1, game_state.generate_successor(agent, action))
-            if max_score <= score:
+            if score >= max_score:
                 max_score = score
                 max_action = action
 
-        return action
+        return max_action
 
 
         
