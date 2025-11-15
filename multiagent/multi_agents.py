@@ -251,9 +251,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             return self.evaluation_function(gamestate)
 
         if agent_idx == 0:
-            return self.max_value(depth, gamestate, alpha, beta)
+            return self.max_value(depth, gamestate, alpha, beta) #packman
         else:
-            return self.min_value(depth, gamestate, agent_idx, alpha, beta)
+            return self.min_value(depth, gamestate, agent_idx, alpha, beta) #ghosts
 
 
     #max-value function
