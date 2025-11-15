@@ -201,100 +201,111 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
-    
     """
-    Your minimax agent with alpha-beta pruning (question 3)
+    Minimax agent with alpha-beta pruning (clean version with
+    max_value and min_value methods).
     """
 
     def get_action(self, game_state):
-
         num_agents = game_state.get_num_agents()
 
-        #we initialize alpha & beta to their values
         alpha = -float('inf')
         beta = float('inf')
 
         best_action = None
-        best_value = -float('inf') #as packman maximises, we initialise it to -infinite
+        best_value = -float('inf')
 
-        actions = game_state.get_legal_actions(0) #packmant is agent 0
+        # Pacman = agent 0
+        actions = game_state.get_legal_actions(0)
 
         for action in actions:
             successor = game_state.generate_successor(0, action)
 
+            # start recursion with next agent (ghost 1)
             value = self.alphabeta(1, successor, alpha, beta)
 
-            if best_value < value:
+            if value > best_value:
                 best_value = value
                 best_action = action
 
-            # update alpha at the root
-            if best_value > alpha:
-                alpha = best_value
+            alpha = max(alpha, best_value)
 
         return best_action
 
 
-    # ---------------------------
-    #   RECURSIVE ALPHA-BETA
-    # ---------------------------
+    #alpha-beta main function
 
     def alphabeta(self, depth, gamestate, alpha, beta):
 
         num_agents = gamestate.get_num_agents()
 
-        # terminal / depth cutoff
-        if depth == self.depth * num_agents or gamestate.is_win() or gamestate.is_lose():
+        # terminal state / cutoff
+        if (depth == self.depth * num_agents or
+            gamestate.is_win() or gamestate.is_lose()):
             return self.evaluation_function(gamestate)
 
-        # which agent plays?
         agent_idx = depth % num_agents
+
+        actions = gamestate.get_legal_actions(agent_idx)
+        if not actions:  # no moves = terminal
+            return self.evaluation_function(gamestate)
+
+        if agent_idx == 0:
+            return self.max_value(depth, gamestate, alpha, beta)
+        else:
+            return self.min_value(depth, gamestate, agent_idx, alpha, beta)
+
+
+    #max-value function
+
+    def max_value(self, depth, gamestate, alpha, beta):
+
+        value = -float('inf')
+
+        actions = gamestate.get_legal_actions(0)
+
+        for action in actions:
+            successor = gamestate.generate_successor(0, action)
+
+            v = self.alphabeta(depth + 1, successor,
+                               alpha=max(alpha, value),
+                               beta=beta)
+
+            value = max(value, v)
+
+            # Prune
+            if value > beta:
+                return value
+
+            alpha = max(alpha, value)
+
+        return value
+
+
+    #min-value function
+
+    def min_value(self, depth, gamestate, agent_idx, alpha, beta):
+
+        value = float('inf')
+
         actions = gamestate.get_legal_actions(agent_idx)
 
-        # if no actions, treat like terminal
-        if not actions:
-            return self.evaluation_function(gamestate)
+        for action in actions:
+            successor = gamestate.generate_successor(agent_idx, action)
 
+            v = self.alphabeta(depth + 1, successor,
+                               alpha=alpha,
+                               beta=min(beta, value))
 
-        # PACMAN (MAX)
-        
-        if agent_idx == 0:
-            value = -float('inf')
+            value = min(value, v)
 
-            for action in actions:
-                successor = gamestate.generate_successor(agent_idx, action)
+            # Prune
+            if value < alpha:
+                return value
 
-                v = self.alphabeta(depth + 1, successor,
-                                   max(alpha, value),  # update alpha going down
-                                   beta)
+            beta = min(beta, value)
 
-                if v > value:
-                    value = v
-
-                # PRUNE (strict, no equality pruning)
-                if value > beta:
-                    return value
-
-            return value
-
-        # GHOSTS (MIN)
-
-        else:
-            value = float('inf')
-
-            for action in actions:
-                successor = gamestate.generate_successor(agent_idx, action)
-
-                v = self.alphabeta(depth + 1, successor, alpha, min(beta, value))  # update beta going down
-
-                if v < value:
-                    value = v
-
-                # PRUNE (strict)
-                if value < alpha:
-                    return value
-
-            return value
+        return value
 
 
         
