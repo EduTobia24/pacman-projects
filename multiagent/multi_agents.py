@@ -168,7 +168,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             # recursive case
             
             #identify the agent
-            agent_idx = depth % num_agents
+            agent_idx = depth % num_agents 
 
             actions = gamestate.get_legal_actions(agent_idx)
 
@@ -200,10 +200,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         
 
 
-
-
-
-
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
@@ -214,7 +210,104 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluation_function
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+
+        class AlphaBetaAgent(MultiAgentSearchAgent):
+    """
+    Your minimax agent with alpha-beta pruning (question 3)
+    """
+
+    def get_action(self, game_state):
+
+        num_agents = game_state.get_num_agents()
+
+        #we initialize alpha & beta to their values
+        alpha = -float('inf')
+        beta = float('inf')
+
+        best_action = None
+        best_value = -float('inf') #as packman maximises, we initialise it to -infinite
+
+        actions = game_state.get_legal_actions(0) #packmant is agent 0
+
+        for action in actions:
+            successor = game_state.generate_successor(0, action)
+
+            value = self.alphabeta(1, successor, alpha, beta)
+
+            if best_value < value:
+                best_value = value
+                best_action = action
+
+            # update alpha at the root
+            if best_value > alpha:
+                alpha = best_value
+
+        return best_action
+
+
+    # ---------------------------
+    #   RECURSIVE ALPHA-BETA
+    # ---------------------------
+
+    def alphabeta(self, depth, gamestate, alpha, beta):
+
+        num_agents = gamestate.get_num_agents()
+
+        # terminal / depth cutoff
+        if depth == self.depth * num_agents or gamestate.is_win() or gamestate.is_lose():
+            return self.evaluation_function(gamestate)
+
+        # which agent plays?
+        agent_idx = depth % num_agents
+        actions = gamestate.get_legal_actions(agent_idx)
+
+        # if no actions, treat like terminal
+        if not actions:
+            return self.evaluation_function(gamestate)
+
+
+        # PACMAN (MAX)
+        
+        if agent_idx == 0:
+            value = -float('inf')
+
+            for action in actions:
+                successor = gamestate.generate_successor(agent_idx, action)
+
+                v = self.alphabeta(depth + 1, successor,
+                                   max(alpha, value),  # update alpha going down
+                                   beta)
+
+                if v > value:
+                    value = v
+
+                # PRUNE (strict, no equality pruning)
+                if value > beta:
+                    return value
+
+            return value
+
+        # GHOSTS (MIN)
+
+        else:
+            value = float('inf')
+
+            for action in actions:
+                successor = gamestate.generate_successor(agent_idx, action)
+
+                v = self.alphabeta(depth + 1, successor, alpha, min(beta, value))  # update beta going down
+
+                if v < value:
+                    value = v
+
+                # PRUNE (strict)
+                if value < alpha:
+                    return value
+
+            return value
+
+
+        
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
