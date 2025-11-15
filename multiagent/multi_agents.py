@@ -207,21 +207,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     """
 
     def get_action(self, game_state):
-<<<<<<< HEAD
-=======
-        """
-        Returns the minimax action using self.depth and self.evaluation_function
-        """
-        "*** YOUR CODE HERE ***"
-
-class AlphaBetaAgent(MultiAgentSearchAgent):
-    """
-    Your minimax agent with alpha-beta pruning (question 3)
-    """
-
-    def get_action(self, game_state):
-
->>>>>>> 581cb42d8767cbaed3f3ff0c7064a9e9e112980f
         num_agents = game_state.get_num_agents()
 
         alpha = -float('inf')
