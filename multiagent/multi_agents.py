@@ -211,7 +211,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        class AlphaBetaAgent(MultiAgentSearchAgent):
+class AlphaBetaAgent(MultiAgentSearchAgent):
     """
     Your minimax agent with alpha-beta pruning (question 3)
     """
@@ -308,7 +308,6 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
 
         
-
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
